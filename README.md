@@ -2,10 +2,6 @@
 
 Inotify bindings for [Crystal language](https://github.com/crystal-lang/crystal).
 
-[![GitHub release](https://img.shields.io/github/release/petoem/inotify.cr.svg?style=flat-square)](https://github.com/petoem/inotify.cr/releases)
-[![Travis](https://img.shields.io/travis/petoem/inotify.cr.svg?style=flat-square)](https://travis-ci.org/petoem/inotify.cr)
-[![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](https://github.com/petoem/inotify.cr/blob/master/LICENSE)
-
 ## Installation
 
 Add this to your application's `shard.yml`:
@@ -22,14 +18,37 @@ dependencies:
 ```crystal
 require "inotify"
 
-# To watch a file or directory ...
-watcher = Inotify.watch "/path/to/file.txt" do |event|
-  # your awesome logic
-end
+module WatchFiles
+  VERSION = "0.1.0"
 
-# ... for 10 seconds.
-sleep 10.seconds
-watcher.close
+  # To watch a file or directory ...
+  puts "Monitor starts..."
+  recursive_monitor = true
+  watcher = Inotify.watch "/home/xtokio/monitor", recursive_monitor do |event|
+    # your logic
+    puts event.type
+    puts event.name
+
+    # rsync files
+    stdout = IO::Memory.new
+    stderr = IO::Memory.new
+
+    # Server (Connection with server is setup with ssh keys)
+    command = "rsync -r /home/xtokio/monitor/ root@64.227.6.48:/root/backup/"
+    exit_code = Process.run(command, shell:true, output:stdout, error:stderr)
+
+    # Local
+    command = "rsync -r /home/xtokio/monitor/ /home/xtokio/backup/"
+    exit_code = Process.run(command, shell:true, output:stdout, error:stderr)
+
+    puts exit_code
+    puts stdout
+    puts stderr
+  end
+
+  sleep 300
+  watcher.close
+end
 ```
 
 _Note: You have to run something in the main fiber or else your program will exit._
