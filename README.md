@@ -10,7 +10,6 @@ Add this to your application's `shard.yml`:
 dependencies:
   inotify:
     github: xtokio/inotify
-    version: 1.0.1
 ```
 
 ## Usage
